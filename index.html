@@ -1,0 +1,1221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blackhole Madness</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Space+Mono:wght@400;700&display=swap');
+
+        body {
+            font-family: 'Space Mono', monospace;
+            background: linear-gradient(135deg, #0a0e27 0%, #1a1a3e 50%, #0f0f2e 100%);
+            min-height: 100vh;
+            color: #e0e0ff;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .starfield {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .star {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            background: white;
+            border-radius: 50%;
+            animation: twinkle 3s infinite;
+        }
+
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 1; }
+        }
+
+        .container {
+            position: relative;
+            z-index: 10;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .screen {
+            display: none;
+            width: 100%;
+            max-width: 1400px;
+        }
+
+        .screen.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .title-screen {
+            text-align: center;
+            animation: float 6s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+        }
+
+        .title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 4rem;
+            font-weight: 900;
+            background: linear-gradient(45deg, #00ff88, #00d4ff, #ff00ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 10px;
+            text-shadow: 0 0 30px rgba(0, 255, 136, 0.5);
+            letter-spacing: 3px;
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            color: #00d4ff;
+            margin-bottom: 50px;
+            letter-spacing: 2px;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        button {
+            font-family: 'Orbitron', sans-serif;
+            padding: 15px 35px;
+            font-size: 1rem;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: bold;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #00ff88, #00d4ff);
+            color: #0a0e27;
+            box-shadow: 0 0 20px rgba(0, 255, 136, 0.4);
+        }
+
+        .btn-primary:hover {
+            box-shadow: 0 0 40px rgba(0, 255, 136, 0.8);
+            transform: scale(1.05);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 0, 255, 0.2);
+            color: #ff00ff;
+            border: 2px solid #ff00ff;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 0, 255, 0.4);
+            box-shadow: 0 0 20px rgba(255, 0, 255, 0.6);
+        }
+
+        .btn-danger {
+            background: rgba(255, 50, 100, 0.3);
+            color: #ff3264;
+            border: 2px solid #ff3264;
+        }
+
+        .btn-danger:hover {
+            background: rgba(255, 50, 100, 0.6);
+            box-shadow: 0 0 20px rgba(255, 50, 100, 0.6);
+        }
+
+        .lobby-screen {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .lobby-content {
+            background: rgba(20, 20, 50, 0.8);
+            border: 2px solid #00ff88;
+            border-radius: 10px;
+            padding: 40px;
+            box-shadow: 0 0 40px rgba(0, 255, 136, 0.3);
+        }
+
+        .lobby-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2rem;
+            color: #00ff88;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #00d4ff;
+            font-weight: bold;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 12px;
+            background: rgba(10, 14, 39, 0.8);
+            border: 2px solid #00d4ff;
+            color: #e0e0ff;
+            border-radius: 5px;
+            font-family: 'Space Mono', monospace;
+            font-size: 1rem;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #ff00ff;
+            box-shadow: 0 0 20px rgba(255, 0, 255, 0.5);
+        }
+
+        .code-display {
+            background: rgba(0, 255, 136, 0.1);
+            border: 2px solid #00ff88;
+            padding: 15px;
+            border-radius: 5px;
+            text-align: center;
+            font-size: 1.5rem;
+            color: #00ff88;
+            margin: 20px 0;
+            letter-spacing: 2px;
+            font-weight: bold;
+        }
+
+        .waiting-text {
+            text-align: center;
+            color: #00d4ff;
+            margin: 20px 0;
+            font-size: 1.1rem;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(0, 212, 255, 0.3);
+            border-top-color: #00d4ff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-left: 10px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .game-screen {
+            width: 100%;
+        }
+
+        .game-container {
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            gap: 20px;
+            height: 100vh;
+            max-height: 100vh;
+        }
+
+        .game-board {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: rgba(20, 20, 50, 0.6);
+            border-radius: 10px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .board-wrapper {
+            display: grid;
+            grid-template-columns: repeat(8, 70px);
+            grid-template-rows: repeat(8, 70px);
+            gap: 2px;
+            padding: 15px;
+            background: rgba(10, 14, 39, 0.9);
+            border: 3px solid #00ff88;
+            border-radius: 10px;
+            position: relative;
+        }
+
+        .board-square {
+            background: linear-gradient(135deg, rgba(0, 212, 255, 0.2), rgba(0, 255, 136, 0.1));
+            border: 1px solid rgba(0, 255, 136, 0.4);
+            border-radius: 3px;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 0.7rem;
+            color: rgba(0, 255, 136, 0.6);
+        }
+
+        .board-square:hover {
+            background: linear-gradient(135deg, rgba(0, 212, 255, 0.4), rgba(0, 255, 136, 0.3));
+            border-color: #00ff88;
+        }
+
+        .board-square.blackhole {
+            background: radial-gradient(circle, #ff00ff, #aa0055);
+            border: 2px solid #ff00ff;
+            box-shadow: 0 0 30px rgba(255, 0, 255, 0.8), inset 0 0 20px rgba(0, 0, 0, 0.8);
+            animation: pulseBlackhole 2s ease-in-out infinite;
+        }
+
+        @keyframes pulseBlackhole {
+            0%, 100% { transform: scale(1); box-shadow: 0 0 30px rgba(255, 0, 255, 0.8), inset 0 0 20px rgba(0, 0, 0, 0.8); }
+            50% { transform: scale(1.1); box-shadow: 0 0 50px rgba(255, 0, 255, 1), inset 0 0 30px rgba(0, 0, 0, 1); }
+        }
+
+        .player-token {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            color: white;
+            font-size: 0.8rem;
+            box-shadow: 0 0 20px currentColor;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        .player-token.p1 {
+            background: linear-gradient(135deg, #00ff88, #00d4ff);
+            color: #0a0e27;
+        }
+
+        .player-token.p2 {
+            background: linear-gradient(135deg, #ff00ff, #ff6b9d);
+            color: white;
+        }
+
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            overflow-y: auto;
+            padding-right: 10px;
+        }
+
+        .panel {
+            background: rgba(20, 20, 50, 0.8);
+            border: 2px solid #00d4ff;
+            border-radius: 10px;
+            padding: 15px;
+            box-shadow: 0 0 20px rgba(0, 212, 255, 0.2);
+        }
+
+        .panel-title {
+            font-family: 'Orbitron', sans-serif;
+            color: #00ff88;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 12px;
+            border-bottom: 1px solid rgba(0, 255, 136, 0.3);
+            padding-bottom: 8px;
+        }
+
+        .player-stats {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            background: rgba(0, 212, 255, 0.1);
+            border-radius: 5px;
+            margin-bottom: 8px;
+        }
+
+        .player-stats.p1 {
+            border-left: 3px solid #00ff88;
+        }
+
+        .player-stats.p2 {
+            border-left: 3px solid #ff00ff;
+        }
+
+        .stat-label {
+            color: #b0b0ff;
+            font-size: 0.85rem;
+        }
+
+        .stat-value {
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+
+        .stat-value.mass {
+            color: #ff9900;
+        }
+
+        .stat-value.position {
+            color: #00d4ff;
+        }
+
+        .dice-section {
+            text-align: center;
+        }
+
+        .dice-display {
+            font-size: 2.5rem;
+            font-family: 'Orbitron', sans-serif;
+            color: #00ff88;
+            margin: 15px 0;
+            font-weight: bold;
+            text-shadow: 0 0 20px rgba(0, 255, 136, 0.6);
+        }
+
+        .roll-button {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #00ff88, #00d4ff);
+            color: #0a0e27;
+            border: none;
+            border-radius: 5px;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .roll-button:hover:not(:disabled) {
+            box-shadow: 0 0 30px rgba(0, 255, 136, 0.8);
+            transform: scale(1.02);
+        }
+
+        .roll-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .star-cards {
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .star-card {
+            background: linear-gradient(135deg, rgba(255, 200, 0, 0.2), rgba(255, 100, 0, 0.1));
+            border: 1px solid rgba(255, 200, 0, 0.5);
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .star-card:hover {
+            background: linear-gradient(135deg, rgba(255, 200, 0, 0.4), rgba(255, 100, 0, 0.3));
+            border-color: #ffc800;
+            box-shadow: 0 0 15px rgba(255, 200, 0, 0.5);
+        }
+
+        .card-name {
+            color: #ffc800;
+            font-weight: bold;
+            font-size: 0.85rem;
+        }
+
+        .card-cost {
+            color: #ff9900;
+            font-size: 0.75rem;
+            margin-top: 5px;
+        }
+
+        .card-effect {
+            color: #b0b0ff;
+            font-size: 0.7rem;
+            margin-top: 3px;
+        }
+
+        .turn-indicator {
+            text-align: center;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 5px 0;
+            font-weight: bold;
+        }
+
+        .turn-indicator.active {
+            background: rgba(0, 255, 136, 0.2);
+            border: 2px solid #00ff88;
+            color: #00ff88;
+        }
+
+        .turn-indicator.inactive {
+            background: rgba(100, 100, 150, 0.2);
+            border: 2px solid rgba(100, 100, 150, 0.5);
+            color: #808080;
+        }
+
+        .game-log {
+            font-size: 0.75rem;
+            max-height: 150px;
+            overflow-y: auto;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 8px;
+            border-radius: 3px;
+            color: #b0b0ff;
+        }
+
+        .log-entry {
+            margin-bottom: 4px;
+            padding: 3px;
+            border-left: 2px solid #00d4ff;
+            padding-left: 6px;
+        }
+
+        .gameover-screen {
+            text-align: center;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .gameover-content {
+            background: rgba(20, 20, 50, 0.9);
+            border: 3px solid #ff00ff;
+            border-radius: 10px;
+            padding: 60px;
+            box-shadow: 0 0 60px rgba(255, 0, 255, 0.5);
+        }
+
+        .gameover-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 3rem;
+            color: #ff00ff;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .gameover-message {
+            font-size: 1.5rem;
+            color: #00ff88;
+            margin-bottom: 40px;
+        }
+
+        .winner-name {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2rem;
+            color: #ffc800;
+            font-weight: bold;
+        }
+
+        @media (max-width: 1200px) {
+            .game-container {
+                grid-template-columns: 1fr;
+            }
+
+            .sidebar {
+                grid-row: 2;
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+                gap: 15px;
+            }
+
+            .title {
+                font-size: 2.5rem;
+            }
+        }
+
+        .sidebar::-webkit-scrollbar,
+        .star-cards::-webkit-scrollbar,
+        .game-log::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .sidebar::-webkit-scrollbar-track,
+        .star-cards::-webkit-scrollbar-track,
+        .game-log::-webkit-scrollbar-track {
+            background: rgba(0, 212, 255, 0.1);
+            border-radius: 10px;
+        }
+
+        .sidebar::-webkit-scrollbar-thumb,
+        .star-cards::-webkit-scrollbar-thumb,
+        .game-log::-webkit-scrollbar-thumb {
+            background: #00d4ff;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="starfield" id="starfield"></div>
+
+    <div class="container">
+        <div class="screen active" id="titleScreen">
+            <div class="title-screen">
+                <h1 class="title">⚫ BLACKHOLE MADNESS ⚫</h1>
+                <p class="subtitle">A Game of Spaghettification</p>
+                <div style="max-width: 400px; margin: 0 auto 40px;">
+                    <input type="text" id="playerNameTitle" placeholder="Enter your name..." maxlength="20" style="width: 100%; padding: 12px; margin-bottom: 15px; background: rgba(10, 14, 39, 0.8); border: 2px solid #00d4ff; color: #e0e0ff; border-radius: 5px; font-family: 'Space Mono', monospace; font-size: 1rem;">
+                </div>
+                <div class="button-group">
+                    <button class="btn-primary" onclick="showCreateLobby()">Create Game</button>
+                    <button class="btn-secondary" onclick="showJoinLobby()">Join Game</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="screen" id="createLobby">
+            <div class="lobby-screen">
+                <div class="lobby-content">
+                    <h2 class="lobby-title">Create Game Room</h2>
+                    <div class="code-display" id="roomCode">GENERATING CODE...</div>
+                    <p class="waiting-text">Share this code with your opponent <span class="spinner"></span></p>
+                    <button class="btn-primary" style="width: 100%; margin-top: 20px;" disabled>Waiting for Opponent...</button>
+                    <button class="btn-danger" style="width: 100%; margin-top: 10px;" onclick="backToTitle()">Back</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="screen" id="joinLobby">
+            <div class="lobby-screen">
+                <div class="lobby-content">
+                    <h2 class="lobby-title">Join Game Room</h2>
+                    <div class="input-group">
+                        <label>Your Name</label>
+                        <input type="text" id="joinPlayerName" placeholder="Enter your name..." maxlength="20">
+                    </div>
+                    <div class="input-group">
+                        <label>Room Code</label>
+                        <input type="text" id="roomCodeInput" placeholder="Enter room code..." maxlength="6">
+                    </div>
+                    <button class="btn-primary" style="width: 100%;" onclick="joinGame()">Join Game</button>
+                    <button class="btn-danger" style="width: 100%; margin-top: 10px;" onclick="backToTitle()">Back</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="screen" id="gameScreen">
+            <div class="game-container">
+                <div class="game-board">
+                    <div class="board-wrapper" id="boardWrapper"></div>
+                </div>
+                <div class="sidebar">
+                    <div class="panel">
+                        <div class="panel-title">Players</div>
+                        <div class="player-stats p1">
+                            <span class="stat-label">Player 1</span>
+                            <div>
+                                <div class="stat-value">Mass: <span class="stat-value mass" id="p1Mass">0</span></div>
+                                <div class="stat-value" style="font-size: 0.8rem; color: #00d4ff;">Pos: <span class="stat-value position" id="p1Pos">0</span></div>
+                            </div>
+                        </div>
+                        <div class="player-stats p2">
+                            <span class="stat-label">Player 2</span>
+                            <div>
+                                <div class="stat-value">Mass: <span class="stat-value mass" id="p2Mass">0</span></div>
+                                <div class="stat-value" style="font-size: 0.8rem; color: #ff00ff;">Pos: <span class="stat-value position" id="p2Pos">0</span></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="panel">
+                        <div class="panel-title">Current Turn</div>
+                        <div class="turn-indicator active" id="p1Turn">Your Turn (Player 1)</div>
+                        <div class="turn-indicator inactive" id="p2Turn">Player 2's Turn</div>
+                        <div class="dice-section">
+                            <div class="dice-display" id="diceDisplay">🎲</div>
+                            <button class="roll-button" id="rollBtn" onclick="rollDice()">Roll Dice</button>
+                        </div>
+                    </div>
+
+                    <div class="panel">
+                        <div class="panel-title">Star Cards</div>
+                        <div class="star-cards" id="starCardsContainer">
+                            <p style="text-align: center; color: #808080;">No cards yet</p>
+                        </div>
+                    </div>
+
+                    <div class="panel">
+                        <div class="panel-title">Game Log</div>
+                        <div class="game-log" id="gameLog"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="screen" id="gameoverScreen">
+            <div class="gameover-screen">
+                <div class="gameover-content">
+                    <h2 class="gameover-title">Game Over!</h2>
+                    <p class="gameover-message">Lost to the Blackhole...</p>
+                    <p class="winner-name" id="winnerDisplay">Player 1 Wins!</p>
+                    <div class="button-group" style="margin-top: 40px;">
+                        <button class="btn-primary" onclick="backToTitle()">Back to Menu</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyB1Cb9WxYLsVn7DR5RackCXJxuFzFRDwDw",
+            authDomain: "blackholemadness-ab040.firebaseapp.com",
+            databaseURL: "https://blackholemadness-ab040-default-rtdb.firebaseio.com",
+            projectId: "blackholemadness-ab040",
+            storageBucket: "blackholemadness-ab040.firebasestorage.app",
+            messagingSenderId: "99533489432323",
+            appId: "1:99533489432323:web:8788edecf88a7828703d86"
+        };
+
+        let db = null;
+        let firebaseReady = false;
+
+        // Initialize Firebase when SDK is loaded
+        function initFirebase() {
+            if (typeof firebase !== 'undefined') {
+                try {
+                    if (!firebase.apps.length) {
+                        firebase.initializeApp(firebaseConfig);
+                    }
+                    db = firebase.database();
+                    firebaseReady = true;
+                    console.log('✓✓✓ Firebase initialized successfully! ✓✓✓');
+                    return true;
+                } catch (err) {
+                    console.error('Firebase init error:', err);
+                }
+            } else {
+                console.log('Waiting for Firebase SDK...');
+            }
+            return false;
+        }
+
+        // Try to initialize Firebase
+        let attempts = 0;
+        const firebaseTimer = setInterval(() => {
+            attempts++;
+            console.log(`Firebase init attempt ${attempts}...`);
+            if (initFirebase()) {
+                clearInterval(firebaseTimer);
+            }
+            if (attempts > 50) {
+                clearInterval(firebaseTimer);
+                console.error('✗ Firebase failed to initialize');
+            }
+        }, 100);
+
+        let gameState = {
+            roomCode: null,
+            playerId: null,
+            playerName: null,
+            gameId: null,
+            isPlayer1: false,
+            board: Array(64).fill(null),
+            p1Position: 0,
+            p2Position: 0,
+            p1Mass: 0,
+            p2Mass: 0,
+            currentTurn: 1,
+            p1Cards: [],
+            p2Cards: [],
+            gameLog: [],
+            gameActive: false
+        };
+
+        const BOARD_SIZE = 64;
+        const CENTER_POSITION = 31;
+        const STAR_CARDS_POOL = [
+            { name: "Acceleration", cost: 10, effect: "buff", description: "Roll +2 next turn", type: "self" },
+            { name: "Gravity Well", cost: 15, effect: "nerf", description: "Opponent moves -1 square", type: "opponent" },
+            { name: "Warp Jump", cost: 20, effect: "buff", description: "Move +3 squares", type: "self" },
+            { name: "Deflector", cost: 12, effect: "buff", description: "Next card is free", type: "self" },
+            { name: "Pull", cost: 18, effect: "nerf", description: "Opponent goes -3 squares", type: "opponent" },
+            { name: "Mass Shield", cost: 8, effect: "buff", description: "Gain +5 mass", type: "self" }
+        ];
+
+        function createStarfield() {
+            const starfield = document.getElementById('starfield');
+            for (let i = 0; i < 100; i++) {
+                const star = document.createElement('div');
+                star.className = 'star';
+                star.style.left = Math.random() * 100 + '%';
+                star.style.top = Math.random() * 100 + '%';
+                star.style.animationDelay = Math.random() * 3 + 's';
+                starfield.appendChild(star);
+            }
+        }
+
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+        }
+
+        function showCreateLobby() {
+            const playerName = document.getElementById('playerNameTitle').value.trim();
+            if (!playerName) {
+                alert('Please enter your name');
+                return;
+            }
+            gameState.playerName = playerName;
+            gameState.isPlayer1 = true;
+            createGameRoom(playerName);
+            showScreen('createLobby');
+        }
+
+        function showJoinLobby() {
+            showScreen('joinLobby');
+        }
+
+        function backToTitle() {
+            document.getElementById('playerNameTitle').value = '';
+            document.getElementById('joinPlayerName').value = '';
+            document.getElementById('roomCodeInput').value = '';
+            gameState = {
+                roomCode: null,
+                playerId: null,
+                playerName: null,
+                gameId: null,
+                isPlayer1: false,
+                board: Array(64).fill(null),
+                p1Position: 0,
+                p2Position: 0,
+                p1Mass: 0,
+                p2Mass: 0,
+                currentTurn: 1,
+                p1Cards: [],
+                p2Cards: [],
+                gameLog: [],
+                gameActive: false
+            };
+            showScreen('titleScreen');
+        }
+
+        function generateRoomCode() {
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+            let code = '';
+            for (let i = 0; i < 6; i++) {
+                code += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            return code;
+        }
+
+        function createGameRoom(playerName) {
+            const roomCode = generateRoomCode();
+            gameState.roomCode = roomCode;
+            gameState.playerId = 'p1_' + Date.now();
+            gameState.gameId = roomCode;
+
+            // Display code immediately
+            document.getElementById('roomCode').textContent = roomCode;
+            console.log('Generated room code:', roomCode);
+
+            // Wait for Firebase if needed
+            if (!firebaseReady || !db) {
+                console.log('Firebase not ready, waiting...');
+                let waitAttempts = 0;
+                const waitTimer = setInterval(() => {
+                    waitAttempts++;
+                    if (firebaseReady && db) {
+                        clearInterval(waitTimer);
+                        console.log('Firebase ready, creating room...');
+                        createRoomInFirebase(roomCode, playerName);
+                    }
+                    if (waitAttempts > 50) {
+                        clearInterval(waitTimer);
+                        alert('Firebase connection timeout. Please refresh and try again.');
+                        showScreen('titleScreen');
+                    }
+                }, 100);
+            } else {
+                createRoomInFirebase(roomCode, playerName);
+            }
+        }
+
+        function createRoomInFirebase(roomCode, playerName) {
+            const gameData = {
+                roomCode: roomCode,
+                p1Id: gameState.playerId,
+                p1Name: playerName,
+                p2Id: null,
+                p2Name: null,
+                p1Position: 0,
+                p2Position: 0,
+                p1Mass: 0,
+                p2Mass: 0,
+                currentTurn: 1,
+                p1Cards: [],
+                p2Cards: [],
+                gameLog: ['Game created'],
+                gameActive: false,
+                status: 'waiting',
+                createdAt: Date.now()
+            };
+
+            db.ref('games/' + roomCode).set(gameData).then(() => {
+                console.log('✓ Room created in Firebase:', roomCode);
+                db.ref('games/' + roomCode).on('value', (snapshot) => {
+                    const data = snapshot.val();
+                    if (data && data.p2Id && !gameState.gameActive) {
+                        console.log('✓ Opponent joined!');
+                        startGame(roomCode, true);
+                    }
+                });
+            }).catch((error) => {
+                console.error('Error:', error);
+                alert('Error: ' + error.message);
+            });
+        }
+
+        function joinGame() {
+            const playerName = document.getElementById('joinPlayerName').value.trim();
+            const code = document.getElementById('roomCodeInput').value.toUpperCase().trim();
+
+            if (!playerName) {
+                alert('Please enter your name');
+                return;
+            }
+
+            if (!code || code.length !== 6) {
+                alert('Please enter a valid 6-character code');
+                return;
+            }
+
+            // Wait for Firebase if needed
+            if (!firebaseReady || !db) {
+                console.log('Firebase not ready, waiting...');
+                let waitAttempts = 0;
+                const waitTimer = setInterval(() => {
+                    waitAttempts++;
+                    if (firebaseReady && db) {
+                        clearInterval(waitTimer);
+                        console.log('Firebase ready, joining room...');
+                        joinRoomInFirebase(playerName, code);
+                    }
+                    if (waitAttempts > 50) {
+                        clearInterval(waitTimer);
+                        alert('Firebase connection timeout. Please refresh and try again.');
+                    }
+                }, 100);
+            } else {
+                joinRoomInFirebase(playerName, code);
+            }
+        }
+
+        function joinRoomInFirebase(playerName, code) {
+            db.ref('games/' + code).once('value').then((snapshot) => {
+                if (!snapshot.exists()) {
+                    alert('Room not found!');
+                    return;
+                }
+
+                const data = snapshot.val();
+                if (data.p2Id) {
+                    alert('Room is full');
+                    return;
+                }
+
+                gameState.playerName = playerName;
+                gameState.isPlayer1 = false;
+                gameState.roomCode = code;
+                gameState.playerId = 'p2_' + Date.now();
+                gameState.gameId = code;
+
+                db.ref('games/' + code).update({
+                    p2Id: gameState.playerId,
+                    p2Name: playerName,
+                    gameActive: true
+                }).then(() => {
+                    console.log('✓ Joined:', code);
+                    startGame(code, false);
+                });
+            });
+        }
+
+        function startGame(roomCode, isPlayer1) {
+            gameState.gameActive = true;
+            
+            db.ref('games/' + roomCode).once('value', (snapshot) => {
+                const data = snapshot.val();
+                updateGameState(data);
+                renderBoard();
+                updateUI();
+                showScreen('gameScreen');
+                
+                db.ref('games/' + roomCode).on('value', (snapshot) => {
+                    updateGameState(snapshot.val());
+                });
+            });
+        }
+
+        function updateGameState(data) {
+            if (!data) return;
+            
+            gameState.p1Position = data.p1Position || 0;
+            gameState.p2Position = data.p2Position || 0;
+            gameState.p1Mass = data.p1Mass || 0;
+            gameState.p2Mass = data.p2Mass || 0;
+            gameState.currentTurn = data.currentTurn || 1;
+            gameState.p1Cards = data.p1Cards || [];
+            gameState.p2Cards = data.p2Cards || [];
+            gameState.gameLog = data.gameLog || [];
+
+            if (data.p1Position === CENTER_POSITION) {
+                endGame(2);
+            } else if (data.p2Position === CENTER_POSITION) {
+                endGame(1);
+            }
+
+            renderBoard();
+            updateUI();
+        }
+
+        function rollDice() {
+            if (!isCurrentPlayer()) return;
+            
+            const roll = Math.floor(Math.random() * 6) + 1;
+            const mass = Math.floor(roll / 2);
+
+            document.getElementById('diceDisplay').textContent = roll;
+
+            const currentPos = gameState.isPlayer1 ? gameState.p1Position : gameState.p2Position;
+            let newPos = currentPos + roll;
+
+            if (gameState.isPlayer1) {
+                gameState.p1Position = Math.min(newPos, CENTER_POSITION);
+                gameState.p1Mass += mass;
+            } else {
+                gameState.p2Position = Math.min(newPos, CENTER_POSITION);
+                gameState.p2Mass += mass;
+            }
+
+            const entry = `${gameState.playerName} rolled ${roll}, gained ${mass} mass`;
+            gameState.gameLog.push(entry);
+
+            const shouldGetCard = Math.random() > 0.6;
+            if (shouldGetCard) {
+                const card = STAR_CARDS_POOL[Math.floor(Math.random() * STAR_CARDS_POOL.length)];
+                if (gameState.isPlayer1) {
+                    gameState.p1Cards.push(card);
+                } else {
+                    gameState.p2Cards.push(card);
+                }
+                gameState.gameLog.push(`${gameState.playerName} got a star card!`);
+            }
+
+            gameState.currentTurn = gameState.currentTurn === 1 ? 2 : 1;
+
+            const updateData = {
+                p1Position: gameState.p1Position,
+                p2Position: gameState.p2Position,
+                p1Mass: gameState.p1Mass,
+                p2Mass: gameState.p2Mass,
+                currentTurn: gameState.currentTurn,
+                p1Cards: gameState.p1Cards,
+                p2Cards: gameState.p2Cards,
+                gameLog: gameState.gameLog
+            };
+
+            db.ref('games/' + gameState.gameId).update(updateData);
+
+            if (gameState.p1Position === CENTER_POSITION) {
+                endGame(2);
+            } else if (gameState.p2Position === CENTER_POSITION) {
+                endGame(1);
+            }
+
+            setTimeout(() => {
+                document.getElementById('diceDisplay').textContent = '🎲';
+            }, 1000);
+        }
+
+        function useStarCard(cardIndex) {
+            const cards = gameState.isPlayer1 ? gameState.p1Cards : gameState.p2Cards;
+            const card = cards[cardIndex];
+            const mass = gameState.isPlayer1 ? gameState.p1Mass : gameState.p2Mass;
+
+            if (mass < card.cost) {
+                alert('Not enough mass!');
+                return;
+            }
+
+            if (gameState.isPlayer1) {
+                gameState.p1Mass -= card.cost;
+            } else {
+                gameState.p2Mass -= card.cost;
+            }
+
+            if (card.type === 'self' && card.effect === 'buff') {
+                if (gameState.isPlayer1) {
+                    gameState.p1Mass += 10;
+                } else {
+                    gameState.p2Mass += 10;
+                }
+            } else if (card.type === 'opponent') {
+                if (card.name === 'Gravity Well') {
+                    if (gameState.isPlayer1) {
+                        gameState.p2Position = Math.max(0, gameState.p2Position - 1);
+                    } else {
+                        gameState.p1Position = Math.max(0, gameState.p1Position - 1);
+                    }
+                } else if (card.name === 'Pull') {
+                    if (gameState.isPlayer1) {
+                        gameState.p2Position = Math.max(0, gameState.p2Position - 3);
+                    } else {
+                        gameState.p1Position = Math.max(0, gameState.p1Position - 3);
+                    }
+                }
+            }
+
+            cards.splice(cardIndex, 1);
+            gameState.gameLog.push(`${gameState.playerName} used ${card.name}!`);
+
+            const updateData = {
+                p1Position: gameState.p1Position,
+                p2Position: gameState.p2Position,
+                p1Mass: gameState.p1Mass,
+                p2Mass: gameState.p2Mass,
+                p1Cards: gameState.p1Cards,
+                p2Cards: gameState.p2Cards,
+                gameLog: gameState.gameLog
+            };
+
+            db.ref('games/' + gameState.gameId).update(updateData);
+            updateUI();
+        }
+
+        function endGame(winner) {
+            gameState.gameActive = false;
+            const winnerName = winner === 1 ? (gameState.isPlayer1 ? gameState.playerName : 'Opponent') : (gameState.isPlayer1 ? 'Opponent' : gameState.playerName);
+            document.getElementById('winnerDisplay').textContent = winnerName + ' Wins! 🌟';
+            showScreen('gameoverScreen');
+
+            db.ref('games/' + gameState.gameId).update({
+                gameActive: false,
+                winner: winner
+            });
+        }
+
+        function renderBoard() {
+            const boardWrapper = document.getElementById('boardWrapper');
+            boardWrapper.innerHTML = '';
+
+            for (let i = 0; i < BOARD_SIZE; i++) {
+                const square = document.createElement('div');
+                square.className = 'board-square';
+                
+                if (i === CENTER_POSITION) {
+                    square.classList.add('blackhole');
+                    square.textContent = '⚫';
+                }
+
+                if (gameState.p1Position === i) {
+                    const token = document.createElement('div');
+                    token.className = 'player-token p1';
+                    token.textContent = 'P1';
+                    square.appendChild(token);
+                } else if (gameState.p2Position === i) {
+                    const token = document.createElement('div');
+                    token.className = 'player-token p2';
+                    token.textContent = 'P2';
+                    square.appendChild(token);
+                }
+
+                boardWrapper.appendChild(square);
+            }
+        }
+
+        function updateUI() {
+            document.getElementById('p1Mass').textContent = gameState.p1Mass;
+            document.getElementById('p2Mass').textContent = gameState.p2Mass;
+            document.getElementById('p1Pos').textContent = gameState.p1Position;
+            document.getElementById('p2Pos').textContent = gameState.p2Position;
+
+            const p1Turn = document.getElementById('p1Turn');
+            const p2Turn = document.getElementById('p2Turn');
+            const rollBtn = document.getElementById('rollBtn');
+
+            if (gameState.currentTurn === 1) {
+                p1Turn.classList.add('active');
+                p1Turn.classList.remove('inactive');
+                p2Turn.classList.remove('active');
+                p2Turn.classList.add('inactive');
+                rollBtn.disabled = !gameState.isPlayer1;
+                p1Turn.textContent = gameState.isPlayer1 ? 'YOUR TURN' : "PLAYER 1's TURN";
+            } else {
+                p2Turn.classList.add('active');
+                p2Turn.classList.remove('inactive');
+                p1Turn.classList.remove('active');
+                p1Turn.classList.add('inactive');
+                rollBtn.disabled = gameState.isPlayer1;
+                p2Turn.textContent = gameState.isPlayer1 ? "OPPONENT's TURN" : "YOUR TURN";
+            }
+
+            const cards = gameState.isPlayer1 ? gameState.p1Cards : gameState.p2Cards;
+            const cardsContainer = document.getElementById('starCardsContainer');
+            
+            if (cards.length === 0) {
+                cardsContainer.innerHTML = '<p style="text-align: center; color: #808080;">No cards yet</p>';
+            } else {
+                cardsContainer.innerHTML = cards.map((card, idx) => `
+                    <div class="star-card" onclick="useStarCard(${idx})">
+                        <div class="card-name">⭐ ${card.name}</div>
+                        <div class="card-cost">Cost: ${card.cost} Mass</div>
+                        <div class="card-effect">${card.description}</div>
+                    </div>
+                `).join('');
+            }
+
+            const gameLog = document.getElementById('gameLog');
+            gameLog.innerHTML = gameState.gameLog.slice(-10).map(entry => 
+                `<div class="log-entry">${entry}</div>`
+            ).join('');
+            gameLog.scrollTop = gameLog.scrollHeight;
+        }
+
+        function isCurrentPlayer() {
+            return (gameState.isPlayer1 && gameState.currentTurn === 1) || 
+                   (!gameState.isPlayer1 && gameState.currentTurn === 2);
+        }
+
+        createStarfield();
+    </script>
+</body>
+</html>
