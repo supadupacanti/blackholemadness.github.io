@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blackhole Madness</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Space+Mono:wght@400;700&display=swap');
+
+        body {
+            font-family: 'Space Mono', monospace;
+            background: linear-gradient(135deg, #0a0e27 0%, #1a1a3e 50%, #0f0f2e 100%);
+            min-height: 100vh;
+            color: #e0e0ff;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .starfield {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .star {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            background: white;
+            border-radius: 50%;
+            animation: twinkle 3s infinite;
+        }
+
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 1; }
+        }
+
+        .container {
+            position: relative;
+            z-index: 10;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .screen {
+            display: none;
+            width: 100%;
+            max-width: 1400px;
+        }
+
+        .screen.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .title-screen {
+            text-align: center;
+            animation: float 6s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+        }
+
+        .title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 4rem;
+            font-weight: 900;
+            background: linear-gradient(45deg, #00ff88, #00d4ff, #ff00ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 10px;
+            text-shadow: 0 0 30px rgba(0, 255, 136, 0.5);
+            letter-spacing: 3px;
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            color: #00d4ff;
+            margin-bottom: 50px;
+            letter-spacing: 2px;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        button {
+            font-family: 'Orbitron', sans-serif;
+            padding: 15px 35px;
+            font-size: 1rem;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: bold;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #00ff88, #00d4ff);
+            color: #0a0e27;
+            box-shadow: 0 0 20px rgba(0, 255, 136, 0.4);
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            box-shadow: 0 0 40px rgba(0, 255, 136, 0.8);
+            transform: scale(1.05);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 0, 255, 0.2);
+            color: #ff00ff;
+            border: 2px solid #ff00ff;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 0, 255, 0.4);
+            box-shadow: 0 0 20px rgba(255, 0, 255, 0.6);
+        }
+
+        .btn-danger {
+            background: rgba(255, 50, 100, 0.3);
+            color: #ff3264;
+            border: 2px solid #ff3264;
+        }
+
+        .btn-danger:hover {
+            background: rgba(255, 50, 100, 0.6);
+            box-shadow: 0 0 20px rgba(255, 50, 100, 0.6);
+        }
+
+        .lobby-content {
+            background: rgba(20, 20, 50, 0.8);
+            border: 2px solid #00ff88;
+            border-radius: 10px;
+            padding: 40px;
+            box-shadow: 0 0 40px rgba(0, 255, 136, 0.3);
+            text-align: center;
+        }
+
+        .code-display {
+            background: rgba(0, 255, 136, 0.1);
+            border: 2px solid #00ff88;
+            padding: 15px;
+            border-radius: 5px;
+            text-align: center;
+            font-size: 1.5rem;
+            color: #00ff88;
+            margin: 20px 0;
+            letter-spacing: 2px;
+            font-weight: bold;
+        }
+
+        .board-wrapper {
+            display: grid;
+            grid-template-columns: repeat(20, 50px);
+            grid-template-rows: repeat(20, 50px);
+            gap: 2px;
+            padding: 15px;
+            background: rgba(10, 14, 39, 0.9);
+            border: 3px solid #00ff88;
+            border-radius: 10px;
+        }
+
+        .board-square {
+            background: rgba(0, 212, 255, 0.1);
+            border: 1px solid rgba(0, 255, 136, 0.2);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+
+        /* Movement Highlight */
+        .board-square.possible-move {
+            background: rgba(0, 255, 136, 0.3);
+            cursor: pointer;
+            box-shadow: inset 0 0 10px #00ff88;
+            z-index: 5;
+        }
+
+        .board-square.possible-move:hover {
+            background: rgba(0, 255, 136, 0.5);
+        }
+
+        /* ANIMATED BLACKHOLE */
+        .board-square.blackhole {
+            background: #000;
+            border: none;
+            overflow: visible;
+            z-index: 10;
+        }
+
+        .board-square.blackhole::before {
+            content: '';
+            position: absolute;
+            width: 150%;
+            height: 150%;
+            background: conic-gradient(from 0deg, transparent, #ff00ff, #00d4ff, transparent);
+            border-radius: 50%;
+            animation: rotateBH 2s linear infinite;
+        }
+
+        .board-square.blackhole::after {
+            content: '⚫';
+            position: absolute;
+            width: 80%;
+            height: 80%;
+            background: black;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.2rem;
+            box-shadow: 0 0 20px #ff00ff;
+            animation: pulseBH 1.5s ease-in-out infinite;
+        }
+
+        @keyframes rotateBH {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        @keyframes pulseBH {
+            0%, 100% { transform: scale(1); box-shadow: 0 0 15px #ff00ff; }
+            50% { transform: scale(1.1); box-shadow: 0 0 30px #00d4ff; }
+        }
+
+        .player-token {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            z-index: 20;
+            box-shadow: 0 0 15px currentColor;
+        }
+
+        .player-token.p1 { background: #00ff88; color: #000; }
+        .player-token.p2 { background: #ff00ff; color: #fff; }
+
+        .game-container { display: grid; grid-template-columns: 1fr 350px; gap: 20px; height: 90vh; }
+        .game-board { overflow: auto; background: rgba(20,20,50,0.5); padding: 20px; border-radius: 10px; }
+        .sidebar { display: flex; flex-direction: column; gap: 15px; }
+        .panel { background: rgba(20, 20, 50, 0.8); border: 1px solid #00d4ff; padding: 15px; border-radius: 10px; }
+        .turn-indicator.active { color: #00ff88; border: 1px solid #00ff88; padding: 5px; text-align: center; margin-bottom: 10px; }
+        .turn-indicator.inactive { color: #555; text-align: center; margin-bottom: 10px; }
+        .game-log { font-size: 0.8rem; height: 100px; overflow-y: auto; background: #000; padding: 5px; }
+    </style>
+</head>
+<body>
+    <div class="starfield" id="starfield"></div>
+
+    <div class="container">
+        <div class="screen active" id="titleScreen">
+            <div class="title-screen">
+                <h1 class="title">⚫ BLACKHOLE MADNESS ⚫</h1>
+                <p class="subtitle">Multiplayer Spaghettification</p>
+                <input type="text" id="playerNameTitle" placeholder="Your Name" style="padding: 10px; border-radius: 5px; border: none; margin-bottom: 20px;">
+                <div class="button-group">
+                    <button class="btn-primary" onclick="showCreateLobby()">Create Game</button>
+                    <button class="btn-secondary" onclick="showJoinLobby()">Join Game</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="screen" id="createLobby">
+            <div class="lobby-content">
+                <h2 class="title" style="font-size: 2rem;">Lobby</h2>
+                <p>Share this code:</p>
+                <div class="code-display" id="roomCode">...</div>
+                <p id="waitingStatus">Waiting for opponent <span class="spinner"></span></p>
+                <button class="btn-danger" onclick="backToTitle()">Cancel</button>
+            </div>
+        </div>
+
+        <div class="screen" id="joinLobby">
+            <div class="lobby-content">
+                <h2 class="title" style="font-size: 2rem;">Join Room</h2>
+                <input type="text" id="joinPlayerName" placeholder="Your Name" style="padding: 10px; margin-bottom: 10px; width: 100%;">
+                <input type="text" id="roomCodeInput" placeholder="6-Digit Code" style="padding: 10px; margin-bottom: 20px; width: 100%;">
+                <button class="btn-primary" onclick="joinGame()">Enter Orbit</button>
+                <button class="btn-danger" onclick="backToTitle()">Back</button>
+            </div>
+        </div>
+
+        <div class="screen" id="gameScreen">
+            <div class="game-container">
+                <div class="game-board">
+                    <div class="board-wrapper" id="boardWrapper"></div>
+                </div>
+                <div class="sidebar">
+                    <div class="panel">
+                        <div id="p1Turn" class="turn-indicator">Player 1</div>
+                        <div id="p2Turn" class="turn-indicator">Player 2</div>
+                        <div style="text-align:center;">
+                            <div style="font-size: 2rem;" id="diceDisplay">🎲</div>
+                            <button id="rollBtn" class="btn-primary" onclick="rollDice()">Roll Dice</button>
+                        </div>
+                    </div>
+                    <div class="panel">
+                        <p>P1 Mass: <span id="p1Mass">0</span></p>
+                        <p>P2 Mass: <span id="p2Mass">0</span></p>
+                    </div>
+                    <div class="panel">
+                        <div class="game-log" id="gameLog"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+
+    <script>
+        // Updated Firebase Config from your image
+        const firebaseConfig = {
+            apiKey: "AIzaSyB1Cb9WxYLsVn7DR5RackCXJxuFzFRDwDw",
+            authDomain: "blackholemadness-ab040.firebaseapp.com",
+            databaseURL: "https://blackholemadness-ab040-default-rtdb.firebaseio.com",
+            projectId: "blackholemadness-ab040",
+            storageBucket: "blackholemadness-ab040.firebasestorage.app",
+            messagingSenderId: "995334894323",
+            appId: "1:995334894323:web:8788edecf88a7828703d86",
+            measurementId: "G-7N53JJ2ZYQ"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        let gameState = {
+            isPlayer1: false,
+            roomCode: '',
+            gameActive: false,
+            p1Pos: 0,
+            p2Pos: 399,
+            p1Mass: 0,
+            p2Mass: 0,
+            currentTurn: 1,
+            availableMoves: []
+        };
+
+        const CENTER = 210;
+
+        function showScreen(id) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+        }
+
+        function showCreateLobby() {
+            const name = document.getElementById('playerNameTitle').value;
+            if(!name) return alert("Enter name");
+            const code = Math.random().toString(36).substring(2, 8).toUpperCase();
+            gameState.roomCode = code;
+            gameState.isPlayer1 = true;
+            document.getElementById('roomCode').innerText = code;
+            
+            db.ref('games/' + code).set({
+                p1Name: name,
+                p1Pos: 0,
+                p2Pos: 399,
+                p1Mass: 0,
+                p2Mass: 0,
+                currentTurn: 1,
+                status: 'waiting'
+            });
+
+            db.ref('games/' + code).on('value', snapshot => {
+                const data = snapshot.val();
+                if(data && data.status === 'active' && !gameState.gameActive) {
+                    startGame();
+                }
+                syncState(data);
+            });
+            showScreen('createLobby');
+        }
+
+        function joinGame() {
+            const name = document.getElementById('joinPlayerName').value;
+            const code = document.getElementById('roomCodeInput').value.toUpperCase();
+            if(!name || !code) return alert("Fill all fields");
+
+            db.ref('games/' + code).once('value', snapshot => {
+                if(!snapshot.exists()) return alert("Room not found");
+                
+                db.ref('games/' + code).update({
+                    p2Name: name,
+                    status: 'active'
+                });
+
+                gameState.roomCode = code;
+                gameState.isPlayer1 = false;
+
+                db.ref('games/' + code).on('value', snap => syncState(snap.val()));
+                startGame();
+            });
+        }
+
+        function syncState(data) {
+            if(!data) return;
+            gameState.p1Pos = data.p1Pos;
+            gameState.p2Pos = data.p2Pos;
+            gameState.p1Mass = data.p1Mass;
+            gameState.p2Mass = data.p2Mass;
+            gameState.currentTurn = data.currentTurn;
+            renderBoard();
+            updateUI();
+        }
+
+        function startGame() {
+            gameState.gameActive = true;
+            showScreen('gameScreen');
+            renderBoard();
+        }
+
+        function renderBoard() {
+            const wrapper = document.getElementById('boardWrapper');
+            wrapper.innerHTML = '';
+            for(let i = 0; i < 400; i++) {
+                const sq = document.createElement('div');
+                sq.className = 'board-square';
+                if(i === CENTER) sq.classList.add('blackhole');
+                
+                if(i === gameState.p1Pos) {
+                    const t = document.createElement('div');
+                    t.className = 'player-token p1'; t.innerText = 'P1';
+                    sq.appendChild(t);
+                }
+                if(i === gameState.p2Pos) {
+                    const t = document.createElement('div');
+                    t.className = 'player-token p2'; t.innerText = 'P2';
+                    sq.appendChild(t);
+                }
+
+                // Logic for selecting the move
+                if(gameState.availableMoves.includes(i)) {
+                    sq.classList.add('possible-move');
+                    sq.onclick = () => makeMove(i);
+                }
+
+                wrapper.appendChild(sq);
+            }
+        }
+
+        function rollDice() {
+            const roll = Math.floor(Math.random() * 6) + 1;
+            document.getElementById('diceDisplay').innerText = roll;
+            document.getElementById('rollBtn').disabled = true;
+
+            const currentPos = gameState.isPlayer1 ? gameState.p1Pos : gameState.p2Pos;
+            gameState.availableMoves = [];
+
+            // Calculate valid moves based on player direction
+            for(let i = 1; i <= roll; i++) {
+                let move = gameState.isPlayer1 ? currentPos + i : currentPos - i;
+                if(move >= 0 && move < 400) gameState.availableMoves.push(move);
+            }
+            renderBoard();
+        }
+
+        function makeMove(newIndex) {
+            const update = {};
+            if(gameState.isPlayer1) {
+                update.p1Pos = newIndex;
+                update.p1Mass = gameState.p1Mass + 5;
+            } else {
+                update.p2Pos = newIndex;
+                update.p2Mass = gameState.p2Mass + 5;
+            }
+            update.currentTurn = gameState.currentTurn === 1 ? 2 : 1;
+            
+            gameState.availableMoves = [];
+            db.ref('games/' + gameState.roomCode).update(update);
+
+            if(newIndex === CENTER) {
+                alert("SPAGHETTIFIED! You lost!");
+                location.reload();
+            }
+        }
+
+        function updateUI() {
+            document.getElementById('p1Mass').innerText = gameState.p1Mass;
+            document.getElementById('p2Mass').innerText = gameState.p2Mass;
+            
+            const isMyTurn = (gameState.isPlayer1 && gameState.currentTurn === 1) || (!gameState.isPlayer1 && gameState.currentTurn === 2);
+            document.getElementById('rollBtn').disabled = !isMyTurn;
+            
+            document.getElementById('p1Turn').className = gameState.currentTurn === 1 ? 'turn-indicator active' : 'turn-indicator inactive';
+            document.getElementById('p2Turn').className = gameState.currentTurn === 2 ? 'turn-indicator active' : 'turn-indicator inactive';
+        }
+
+        function backToTitle() { location.reload(); }
+
+        // Starfield background
+        const field = document.getElementById('starfield');
+        for(let i=0; i<100; i++) {
+            const s = document.createElement('div');
+            s.className = 'star';
+            s.style.top = Math.random()*100+'%';
+            s.style.left = Math.random()*100+'%';
+            field.appendChild(s);
+        }
+    </script>
+</body>
+</html>
